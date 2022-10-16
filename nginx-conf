@@ -1,0 +1,22 @@
+server {
+       listen         80;
+       server_name    bunsamosa.savaal.xyz www.bunsamosa.savaal.xyz;
+       return         301 https://$server_name$request_uri;
+}
+
+server {
+        server_name bunsamosa.savaal.xyz www.bunsamosa.savaal.xyz;
+        listen 443 ssl;
+        ssl on;
+        ssl_certificate     /etc/letsencrypt/live/domain.com/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/domain.com/privkey.pem;
+
+        root /var/www/html;
+        location / {
+                proxy_pass http://127.0.0.1:3000;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+        }
+
+}
