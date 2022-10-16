@@ -145,7 +145,7 @@ func main() {
 				comment, _, err := client.Issues.CreateComment(context.TODO(), strconv.Itoa(myapp.orgID), payload.Repository.FullName, int(payload.Issue.Number), &v3.IssueComment{Body: &feedback})
 
 				if err != nil {
-					log.Println("[ERROR] Could note create comment.")
+					log.Println("[ERROR] Could note create comment.", err)
 				} else {
 					log.Printf("Successfully created comment on new issue. Comment ID %d\n", comment.ID)
 				}
