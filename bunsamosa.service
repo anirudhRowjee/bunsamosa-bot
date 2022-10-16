@@ -1,0 +1,13 @@
+[Unit]
+Description=BunSamosa Service
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+
+Environment=GOPATH=/root/bunsamosa-bot
+ExecStart=/root/bunsamosa-bot/bunsamosa-bot
+
+[Install]
+WantedBy=multi-user.target
