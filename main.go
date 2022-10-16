@@ -68,7 +68,7 @@ func main() {
 	myapp := App{}
 	// Initialize state
 	// TODO Separate the YAML Loading from the value setting
-	myapp.parse_from_YAML("./secrets.yaml")
+	myapp.parse_from_YAML("/root/bunsamosa/secrets.yaml")
 	log.Println("YAML Parsed successfully")
 
 	// Initialize the App State
