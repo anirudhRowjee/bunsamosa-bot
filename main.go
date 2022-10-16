@@ -102,15 +102,18 @@ func main() {
 	// with the webhook secret from the YAML Parsed into the app in scope
 	http.HandleFunc("/Github", func(response http.ResponseWriter, request *http.Request) {
 
+		log.Println("Handling Payload...")
+
 		// Initialize webhook parser
 		hook, err := ghwebhooks.New(ghwebhooks.Options.Secret(myapp.webhookSecret))
 		if err != nil {
 			log.Println("Error Initializing Webhook Parser ->", err)
 			return
 		}
+		log.Println("Webhook Parser Initialized")
 
 		// Parse the incoming request for payload Information, Specifically to check if it's an issue comment
-		payload, err := hook.Parse(request, []ghwebhooks.Event{ghwebhooks.IssueCommentEvent}...)
+		payload, err := hook.Parse(request, []ghwebhooks.Event{ghwebhooks.IssueCommentEvent, ghwebhooks.IssuesEvent, ghwebhooks.PingEvent, ghwebhooks.PullRequestEvent, ghwebhooks.PublicEvent}...)
 		if err != nil {
 			if err == ghwebhooks.ErrEventNotFound {
 				log.Printf("received unregistered GitHub event: %v\n", err)
@@ -121,16 +124,27 @@ func main() {
 			}
 			return
 		}
+		log.Println("Payload Parsed")
 
 		// TODO Launch Goroutines with/without pool to handle incoming requests
 		switch payload := payload.(type) {
 		case ghwebhooks.IssueCommentPayload:
-			log.Println("Someone Commented on an issue ->", payload)
+			log.Println("[PAYLOAD] Someone Commented on an issue ->", payload)
+		case ghwebhooks.IssuesPayload:
+			log.Println("[PAYLOAD] There's an Issue ->", payload)
+		case ghwebhooks.PingPayload:
+			log.Println("[PAYLOAD] Ping ->", payload)
+		case ghwebhooks.PullRequestPayload:
+			log.Println("[PAYLOAD] There's a Pull Request ->", payload)
+		case ghwebhooks.PublicPayload:
+			log.Println("[PAYLOAD] Some Public Event ->", payload)
 		default:
 			log.Println("missing handler")
 		}
+		log.Println("Payload Handling Complete")
 
 		response.WriteHeader(http.StatusOK)
+		log.Println("Response Written")
 
 	})
 
@@ -138,7 +152,9 @@ func main() {
 		response.Write([]byte("pong"))
 	})
 
+	log.Println("Starting Web Server...")
 	err = http.ListenAndServe("0.0.0.0:3000", nil)
+	log.Println("Started  Web Server...")
 	if err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
