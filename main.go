@@ -131,14 +131,30 @@ func main() {
 
 		case ghwebhooks.IssueCommentPayload:
 			// TODO Parse for Bounty Assignment
-			log.Printf("[PAYLOAD] Someone Commented on an issue -> user %s commented %s on repository %s", payload.Sender.Login, payload.Comment.Body, payload.Repository.FullName)
+			log.Printf("[PAYLOAD] Someone Commented on an issue -> user [%s] commented [%s] on repository [%s]", payload.Sender.Login, payload.Comment.Body, payload.Repository.FullName)
 
 		case ghwebhooks.IssuesPayload:
 			// TODO Respond with a comment saying someone will check it out soon
-			log.Printf("[PAYLOAD] Someone Commented on an issue -> user %s Opened an Issue with title %s on repository %s", payload.Sender.Login, payload.Issue.Title, payload.Repository.FullName)
+			log.Printf("[PAYLOAD] Someone Commented on an issue -> user [%s] Opened an Issue with title [%s] on repository [%s]", payload.Sender.Login, payload.Issue.Title, payload.Repository.FullName)
+
+			// thank them for the issue, saying we'll respond soon
+			go func(p *ghwebhooks.IssuesPayload) {
+				client := v3.NewClient(&http.Client{Transport: installation_transport})
+				feedback := "Thank you for Opening this issue! A Maintainer will review it soon."
+
+				comment, _, err := client.Issues.CreateComment(context.TODO(), strconv.Itoa(myapp.orgID), payload.Repository.FullName, int(payload.Issue.Number), &v3.IssueComment{Body: &feedback})
+
+				if err != nil {
+					log.Println("[ERROR] Could note create comment.")
+				} else {
+					log.Printf("Successfully created comment on new issue. Comment ID %d\n", comment.ID)
+				}
+
+			}(&payload)
 
 		case ghwebhooks.PingPayload:
 			log.Println("[PAYLOAD] Ping ->", payload)
+
 		case ghwebhooks.PullRequestPayload:
 			// TODO Respond with a comment saying congratulations, someone will review your PR soon
 			log.Println("[PAYLOAD] There's a Pull Request ->", payload)
