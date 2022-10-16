@@ -142,7 +142,7 @@ func main() {
 				client := v3.NewClient(&http.Client{Transport: installation_transport})
 				feedback := "Thank you for Opening this issue! A Maintainer will review it soon."
 
-				comment, _, err := client.Issues.CreateComment(context.TODO(), strconv.Itoa(myapp.orgID), payload.Repository.FullName, int(payload.Issue.Number), &v3.IssueComment{Body: &feedback})
+				comment, _, err := client.Issues.CreateComment(context.TODO(), payload.Repository.Owner.Login, payload.Repository.Name, int(payload.Issue.Number), &v3.IssueComment{Body: &feedback})
 
 				if err != nil {
 					log.Println("[ERROR] Could note create comment.", err)
