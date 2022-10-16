@@ -128,13 +128,19 @@ func main() {
 
 		// TODO Launch Goroutines with/without pool to handle incoming requests
 		switch payload := payload.(type) {
+
 		case ghwebhooks.IssueCommentPayload:
-			log.Println("[PAYLOAD] Someone Commented on an issue ->", payload)
+			// TODO Parse for Bounty Assignment
+			log.Printf("[PAYLOAD] Someone Commented on an issue -> user %s commented %s on repository %s", payload.Sender.Login, payload.Comment.Body, payload.Repository.FullName)
+
 		case ghwebhooks.IssuesPayload:
-			log.Println("[PAYLOAD] There's an Issue ->", payload)
+			// TODO Respond with a comment saying someone will check it out soon
+			log.Printf("[PAYLOAD] Someone Commented on an issue -> user %s Opened an Issue with title %s on repository %s", payload.Sender.Login, payload.Issue.Title, payload.Repository.FullName)
+
 		case ghwebhooks.PingPayload:
 			log.Println("[PAYLOAD] Ping ->", payload)
 		case ghwebhooks.PullRequestPayload:
+			// TODO Respond with a comment saying congratulations, someone will review your PR soon
 			log.Println("[PAYLOAD] There's a Pull Request ->", payload)
 		case ghwebhooks.PublicPayload:
 			log.Println("[PAYLOAD] Some Public Event ->", payload)
