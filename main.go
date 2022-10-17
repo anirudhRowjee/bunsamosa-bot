@@ -4,18 +4,17 @@ import (
 	"context"
 	"log"
 	"net/http"
+
 	// "github.com/go-playground/webhooks/v6"
-	v3 "github.com/google/go-github/v47/github"
-	"github.com/bradleyfalzon/ghinstallation/v2"
 	"fmt"
+
 	"github.com/anirudhRowjee/bunsamosa-bot/globals"
 	"github.com/anirudhRowjee/bunsamosa-bot/handlers"
+	"github.com/bradleyfalzon/ghinstallation/v2"
+	v3 "github.com/google/go-github/v47/github"
 )
 
-
 // TODO Write YAML Parsing for environment variables
-
-
 
 func main() {
 
@@ -38,7 +37,7 @@ func main() {
 
 	// NOTE Don't forget to install the app in your repository before you do this!
 	// Initialize the installation
-	installation, _, err := v3.NewClient(&http.Client{Transport: app_transport}).Apps.FindOrganizationInstallation(context.TODO(), fmt.Sprint(Myapp.OrgID))
+	installation, _, err := v3.NewClient(&http.Client{Transport: app_transport}).Apps.FindOrganizationInstallation(context.TODO(), fmt.Sprint(globals.Myapp.OrgID))
 	if err != nil {
 		log.Println("Could not Find Organization installation")
 		panic(err)
@@ -58,7 +57,7 @@ func main() {
 	// Serve!
 	// TODO use Higher-Order Functions to generate this response function
 	// with the webhook secret from the YAML Parsed into the app in scope
-	http.HandleFunc("/Github",handlers.WebhookHandler)
+	http.HandleFunc("/Github", handlers.WebhookHandler)
 	http.HandleFunc("/ping", handlers.PingHandler)
 
 	log.Println("Starting Web Server...")
