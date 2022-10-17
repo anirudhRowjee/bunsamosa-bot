@@ -21,7 +21,7 @@ func main() {
 	globals.Myapp = globals.App{}
 
 	globals.Myapp.Parse_from_YAML("/root/bunsamosa-bot/secrets.yaml")
-	log.Println("YAML Parsed successfully")
+	log.Println("[INIT] YAML Parsed successfully")
 
 	// Initialize the Github Client
 	globals.Myapp.Initialize_client()
@@ -32,7 +32,7 @@ func main() {
 	http.HandleFunc("/Github", handlers.WebhookHandler)
 	http.HandleFunc("/ping", handlers.PingHandler)
 
-	log.Println("Starting Web Server...")
+	log.Println("[INIT] Starting Web Server")
 
 	err := http.ListenAndServe("0.0.0.0:3000", nil)
 	if err != nil && err != http.ErrServerClosed {

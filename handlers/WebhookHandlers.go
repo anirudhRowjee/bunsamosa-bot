@@ -23,6 +23,8 @@ func newIssueHandler(parsed_hook *ghwebhooks.IssuesPayload) {
 
 	if err != nil {
 		log.Printf("[ERROR] Could not Comment on Issue -> Repository [%s] Issue (#%d)[%s]\n", parsed_hook.Repository.FullName, parsed_hook.Issue.Number, parsed_hook.Issue.Title)
+	} else {
+		log.Printf("[ISSUEHANDLER] Successfully Commented on Issue -> Repository [%s] Issue (#%d)[%s]\n", parsed_hook.Repository.FullName, parsed_hook.Issue.Number, parsed_hook.Issue.Title)
 	}
 }
 
@@ -33,6 +35,7 @@ func newPullRequestHandler(parsed_hook *ghwebhooks.PullRequestPayload) {
 
 func newCommentHandler(parsed_hook *ghwebhooks.PullRequestPayload) {
 	// TODO
+	// NOTE Ignore comments from BunSamosa Bot
 }
 */
 
@@ -67,7 +70,7 @@ func WebhookHandler(response http.ResponseWriter, request *http.Request) {
 
 		} else if err == ghwebhooks.ErrEventNotSpecifiedToParse {
 			// FIXME Unsure about this
-			log.Println("[LOG] ", err)
+			log.Println("[ERROR] This event hasn't been specified to parse", err)
 			response.WriteHeader(http.StatusBadRequest)
 			return
 
@@ -107,10 +110,10 @@ func WebhookHandler(response http.ResponseWriter, request *http.Request) {
 		log.Println("[PAYLOAD] Some Public Event ->", parsed_hook)
 
 	default:
-		log.Println("missing handler")
+		log.Println("[WARN] missing handler")
 
 	}
 
-	log.Println("Webhook Has been Handled!")
+	log.Println("[PAYLOAD] Webhook Has been Handled!")
 	response.WriteHeader(http.StatusOK)
 }
