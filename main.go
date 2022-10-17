@@ -1,17 +1,13 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
 
 	// "github.com/go-playground/webhooks/v6"
-	"fmt"
 
 	"github.com/anirudhRowjee/bunsamosa-bot/globals"
 	"github.com/anirudhRowjee/bunsamosa-bot/handlers"
-	"github.com/bradleyfalzon/ghinstallation/v2"
-	v3 "github.com/google/go-github/v47/github"
 )
 
 // TODO Write YAML Parsing for environment variables
@@ -27,32 +23,8 @@ func main() {
 	globals.Myapp.Parse_from_YAML("/root/bunsamosa-bot/secrets.yaml")
 	log.Println("YAML Parsed successfully")
 
-	// Initialize the App State
-	app_transport, err := ghinstallation.NewAppsTransportKeyFromFile(http.DefaultTransport, int64(globals.Myapp.AppID), globals.Myapp.CertPath)
-	if err != nil {
-		log.Println("Could not Create Github App Client")
-		panic(err)
-	}
-	log.Println("App Transport Initialized")
-
-	// NOTE Don't forget to install the app in your repository before you do this!
-	// Initialize the installation
-	installation, _, err := v3.NewClient(&http.Client{Transport: app_transport}).Apps.FindOrganizationInstallation(context.TODO(), fmt.Sprint(globals.Myapp.OrgID))
-	if err != nil {
-		log.Println("Could not Find Organization installation")
-		panic(err)
-	}
-	log.Println("Organization Transport Initialized")
-
-	// Initialize an authenticated transport for the installation
-	installationID := installation.GetID()
-	installation_transport := ghinstallation.NewFromAppsTransport(app_transport, installationID)
-	globals.MainClient = v3.NewClient(&http.Client{Transport: installation_transport})
-
-	log.Printf("successfully initialized GitHub app client, installation-id:%s expected-events:%v\n", fmt.Sprint(installationID), installation.Events)
-
-	log.Println("Installation transport ->", installation_transport)
-	log.Println("Hello, world!")
+	// Initialize the Github Client
+	globals.Myapp.Initialize_client()
 
 	// Serve!
 	// TODO use Higher-Order Functions to generate this response function
@@ -61,8 +33,8 @@ func main() {
 	http.HandleFunc("/ping", handlers.PingHandler)
 
 	log.Println("Starting Web Server...")
-	err = http.ListenAndServe("0.0.0.0:3000", nil)
-	log.Println("Started  Web Server...")
+
+	err := http.ListenAndServe("0.0.0.0:3000", nil)
 	if err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
