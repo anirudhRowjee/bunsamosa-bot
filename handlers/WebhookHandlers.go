@@ -4,12 +4,41 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	// "github.com/go-playground/webhooks/v6"
 	"github.com/anirudhRowjee/bunsamosa-bot/globals"
 	ghwebhooks "github.com/go-playground/webhooks/v6/github"
 	v3 "github.com/google/go-github/v47/github"
 )
+
+// Function to check if a string is in an array
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
+
+// Function to check if a URL is a Pull Request URL
+func is_pull_request(url string) bool {
+	// Github Pull Request URLs are of the form
+	// https://github.com/<org>/<repo>/pull/<number>
+	// If we can verify that the second-last element is a string
+	// Then we can verify that the given URL is a pull request URL
+	parts := strings.Split(url, "/")
+	if contains(parts, "pulls") {
+		log.Println("[PR_URLVALID] This is a Pull Request.", parts)
+		return true
+	} else {
+		log.Println("[PR_URLVALID] This is not a Pull Request.", parts)
+		return false
+	}
+
+}
 
 func newIssueHandler(parsed_hook *ghwebhooks.IssuesPayload) {
 
@@ -28,16 +57,79 @@ func newIssueHandler(parsed_hook *ghwebhooks.IssuesPayload) {
 	}
 }
 
-/*
-func newPullRequestHandler(parsed_hook *ghwebhooks.PullRequestPayload) {
-	// TODO
+func newPRHandler(parsed_hook *ghwebhooks.PullRequestPayload) {
+
+	// Generate a New Comment - Text is Customizable
+
+	// TODO Refactor: Add these responses to the App Struct
+	response := "Thank you from Opening this Pull Request, @" + parsed_hook.Sender.Login + " ! A Maintainer will review it soon!"
+	comment := v3.IssueComment{Body: &response}
+
+	_, _, err := globals.Myapp.RuntimeClient.Issues.CreateComment(context.TODO(), parsed_hook.Repository.Owner.Login, parsed_hook.Repository.Name, int(parsed_hook.PullRequest.Number), &comment)
+
+	if err != nil {
+		log.Printf("[ERROR] Could not Comment on Pull Request -> Repository [%s] PR (#%d)[%s]\n", parsed_hook.Repository.FullName, parsed_hook.PullRequest.Number, parsed_hook.PullRequest.Title)
+		log.Println("Error ->", err)
+	} else {
+		log.Printf("[PRHANDLER] Successfully Commented on Pull Request -> Repository [%s] PR (#%d)[%s]\n", parsed_hook.Repository.FullName, parsed_hook.PullRequest.Number, parsed_hook.PullRequest.Title)
+	}
 }
 
-func newCommentHandler(parsed_hook *ghwebhooks.PullRequestPayload) {
-	// TODO
-	// NOTE Ignore comments from BunSamosa Bot
+func newPRCommentHandler(parsed_hook *ghwebhooks.IssueCommentPayload) {
+	// Parse the current webhook
+
+	// List of maintainers
+	// TODO Move this to the app
+	maintainers := []string{
+		"anirudhRowjee",
+	}
+
+	// Step 1 -> Validate, make sure the issuecomment is on a PR and not on an issue,
+	if is_pull_request(parsed_hook.Issue.PullRequest.URL) && parsed_hook.Action == "created" && contains(maintainers, parsed_hook.Sender.Login) {
+
+		log.Println("A Maintainer Commented -> ")
+		log.Printf("[PR_COMMENTHANDLER] Successfully Commented on Pull Request -> Repository [%s] PR (#%d)[%s]\n", parsed_hook.Repository.FullName, parsed_hook.Issue.Number, parsed_hook.Issue.Title)
+
+		// parse the comment here to give a bounty
+		comment_text_parts := strings.Split(parsed_hook.Comment.Body, " ")
+		if comment_text_parts[0] == "!bounty" {
+
+			// Convert the points
+			points, err := strconv.Atoi(comment_text_parts[1])
+			if err != nil {
+				log.Println("[ERROR][BOUNTY] Invalid Points Assigned -> ", comment_text_parts[1])
+			}
+
+			// Assign the bounty points
+			err = globals.Myapp.Dbmanager.AssignBounty(
+				parsed_hook.Sender.Login,
+				parsed_hook.Issue.User.Login,
+				parsed_hook.Issue.PullRequest.HTMLURL,
+				points,
+			)
+			if err != nil {
+				log.Println("[ERROR][BOUNTY] Could not assign bounty points ->", err)
+				return
+			}
+
+			log.Printf("[PR_COMMENTHANDLER] Successfully Assigned Bounty on Pull Request -> Repository [%s] PR (#%d)[%s] to user %s for %s points\n", parsed_hook.Repository.FullName, parsed_hook.Issue.Number, parsed_hook.Issue.Title, parsed_hook.Issue.User.Login, comment_text_parts[1])
+
+			response := "Assigned " + comment_text_parts[1] + " Bounty points to user @" + parsed_hook.Issue.User.Login + " !"
+			comment := v3.IssueComment{Body: &response}
+
+			_, _, new_err := globals.Myapp.RuntimeClient.Issues.CreateComment(context.TODO(), parsed_hook.Repository.Owner.Login, parsed_hook.Repository.Name, int(parsed_hook.Issue.Number), &comment)
+			if new_err != nil {
+				log.Printf("[ERROR] Could not Comment on Pull Request -> Repository [%s] PR (#%d)[%s]\n", parsed_hook.Repository.FullName, parsed_hook.Issue.Number, parsed_hook.Issue.Title)
+				log.Println("Error ->", new_err)
+			} else {
+				log.Printf("[PRHANDLER] Successfully Commented on Pull Request -> Repository [%s] PR (#%d)[%s]\n", parsed_hook.Repository.FullName, parsed_hook.Issue.Number, parsed_hook.Issue.Title)
+			}
+
+		}
+	}
+	// Return error
+
 }
-*/
 
 func WebhookHandler(response http.ResponseWriter, request *http.Request) {
 
@@ -91,14 +183,22 @@ func WebhookHandler(response http.ResponseWriter, request *http.Request) {
 		} else {
 			log.Printf("[PAYLOAD] Non-Open Issue Event -> user [%s] Did something [%s] On an Issue with title [%s] on repository [%s]", parsed_hook.Sender.Login, parsed_hook.Action, parsed_hook.Issue.Title, parsed_hook.Repository.FullName)
 		}
+
 	// The API has been Pinged from Github
 	case ghwebhooks.PingPayload:
 		log.Println("[PAYLOAD] Ping ->", parsed_hook)
 
 	// Someone has opened a new Pull Request
 	case ghwebhooks.PullRequestPayload:
+
 		// TODO Respond with a comment saying congratulations, someone will review your PR soon
-		log.Println("[PAYLOAD] There's a Pull Request ->", parsed_hook)
+		if parsed_hook.Action == "opened" {
+			log.Printf("[PAYLOAD] Someone Opened an PR -> user [%s] Opened an Issue with title [%s] on repository [%s]", parsed_hook.Sender.Login, parsed_hook.PullRequest.Title, parsed_hook.Repository.FullName)
+			go newPRHandler(&parsed_hook)
+			// TODO Add handler to assign bounty points
+		} else {
+			log.Printf("[PAYLOAD] Non-Open PR Event -> user [%s] Did something [%s] On an PR with title [%s] on repository [%s]", parsed_hook.Sender.Login, parsed_hook.Action, parsed_hook.PullRequest.Title, parsed_hook.Repository.FullName)
+		}
 
 	// Someone has commented on an Issue
 	// We'll be using this webhook for the following -
@@ -106,6 +206,7 @@ func WebhookHandler(response http.ResponseWriter, request *http.Request) {
 	// 		- Freezing the Leaderboard
 	case ghwebhooks.IssueCommentPayload:
 		log.Printf("[PAYLOAD] Someone Commented on an issue -> user [%s] commented [%s] on repository [%s]", parsed_hook.Sender.Login, parsed_hook.Comment.Body, parsed_hook.Repository.FullName)
+		go newPRCommentHandler(&parsed_hook)
 
 	// The Repository has been made public
 	// TODO Consider if we really need this

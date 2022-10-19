@@ -45,6 +45,8 @@ func main() {
 	// with the webhook secret from the YAML Parsed into the app in scope
 	http.HandleFunc("/Github", handlers.WebhookHandler)
 	http.HandleFunc("/ping", handlers.PingHandler)
+	http.HandleFunc("/lb_all", handlers.Leaderboard_allrecords)
+	http.HandleFunc("/leaderboard", handlers.Leaderboard_materialized)
 
 	log.Println("[INIT] Starting Web Server")
 

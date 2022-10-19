@@ -30,8 +30,8 @@ type App struct {
 	AppTransport  *ghinstallation.AppsTransport
 
 	// TODO Add Database Dependencies
-	db_connection_string string
-	dbmanager            *database.DBManager
+	Db_connection_string string
+	Dbmanager            *database.DBManager
 }
 
 var Myapp App
@@ -73,7 +73,7 @@ func (a *App) Parse_from_YAML(path string) {
 	}
 
 	// Read in the Connection String
-	a.db_connection_string = yaml_output["dbConnectionString"]
+	a.Db_connection_string = yaml_output["dbConnectionString"]
 }
 
 func (a *App) Initialize_github_client() {
@@ -114,11 +114,68 @@ func (a *App) Initialize_database() {
 
 	dbmanager := database.DBManager{}
 	log.Println("[DATABASE] Initializing Database Manager")
-	err := dbmanager.Init(a.db_connection_string)
+	err := dbmanager.Init(a.Db_connection_string)
 	if err != nil {
 		log.Panicln("[DATABASE] DB Initialization Failed ->", err)
 	} else {
-		a.dbmanager = &dbmanager
+		a.Dbmanager = &dbmanager
 		log.Println("[DATABASE] DB Manager Initialized successfully")
 	}
+}
+
+func (a *App) Leaderboard_GetAllRecords() ([]database.ContributorRecordModel, error) {
+
+	// Get all the time series data present so far
+	// from the database
+	var all_records []database.ContributorRecordModel
+
+	// Use the database method
+	records, err := a.Dbmanager.Get_all_records()
+	if err != nil {
+		return nil, err
+	} else {
+		all_records = records
+	}
+
+	return all_records, nil
+
+}
+
+func (a *App) AssignBountyPoints() ([]database.ContributorRecordModel, error) {
+
+	// Get all the time series data present so far
+	// from the database
+	var all_records []database.ContributorRecordModel
+
+	// Use the database method
+	records, err := a.Dbmanager.Get_all_records()
+	if err != nil {
+		return nil, err
+	} else {
+		all_records = records
+	}
+
+	return all_records, nil
+
+}
+
+func (a *App) Leaderboard_GetMaterialized() ([]database.ContributorModel, error) {
+
+	// Get a materialized view of the leaderboard
+	var leaderboard []database.ContributorModel
+
+	records, err := a.Dbmanager.Get_leaderboard()
+	if err != nil {
+		return nil, err
+	} else {
+		leaderboard = records
+	}
+
+	return leaderboard, nil
+
+}
+
+func (a *App) Leaderboard_GetUserRecord(user string) {
+	// Take a user's username and return their records
+	// TODO
 }
