@@ -1,13 +1,12 @@
 package handlers
 
-import(
-	"net/http"
+import (
 	"log"
+	"net/http"
 )
 
-func PingHandler(response http.ResponseWriter , request *http.Request){
-	log.Println("Received Pin request!")
+func PingHandler(response http.ResponseWriter, request *http.Request) {
+	log.Println("[PING] Received Ping request!")
 	response.Write([]byte("Pong UwU"))
-	response.WriteHeader(http.StatusOK)
+	// response.WriteHeader(http.StatusOK)
 }
-
