@@ -64,13 +64,13 @@ func WebhookHandler(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 
 		if err == ghwebhooks.ErrEventNotFound {
-			log.Println("[ERROR] Undefined GitHub event received. err :", err)
+			log.Println("[WARN] Undefined GitHub event received. err :", err)
 			response.WriteHeader(http.StatusOK)
 			return
 
 		} else if err == ghwebhooks.ErrEventNotSpecifiedToParse {
 			// FIXME Unsure about this
-			log.Println("[ERROR] This event hasn't been specified to parse", err)
+			log.Println("[WARN] This event hasn't been specified to parse", err)
 			response.WriteHeader(http.StatusBadRequest)
 			return
 
@@ -85,9 +85,12 @@ func WebhookHandler(response http.ResponseWriter, request *http.Request) {
 
 	// A new issue has been opened.
 	case ghwebhooks.IssuesPayload:
-		log.Printf("[PAYLOAD] Someone Opened an Issue -> user [%s] Opened an Issue with title [%s] on repository [%s]", parsed_hook.Sender.Login, parsed_hook.Issue.Title, parsed_hook.Repository.FullName)
-		go newIssueHandler(&parsed_hook)
-
+		if parsed_hook.Action == "opened" {
+			log.Printf("[PAYLOAD] Someone Opened an Issue -> user [%s] Opened an Issue with title [%s] on repository [%s]", parsed_hook.Sender.Login, parsed_hook.Issue.Title, parsed_hook.Repository.FullName)
+			go newIssueHandler(&parsed_hook)
+		} else {
+			log.Printf("[PAYLOAD] Non-Open Issue Event -> user [%s] Did something [%s] On an Issue with title [%s] on repository [%s]", parsed_hook.Sender.Login, parsed_hook.Action, parsed_hook.Issue.Title, parsed_hook.Repository.FullName)
+		}
 	// The API has been Pinged from Github
 	case ghwebhooks.PingPayload:
 		log.Println("[PAYLOAD] Ping ->", parsed_hook)

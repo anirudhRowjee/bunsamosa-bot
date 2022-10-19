@@ -13,6 +13,7 @@ import (
 	v3 "github.com/google/go-github/v47/github"
 	"gopkg.in/yaml.v2"
 
+	"github.com/anirudhRowjee/bunsamosa-bot/database"
 	"github.com/bradleyfalzon/ghinstallation/v2"
 )
 
@@ -29,6 +30,8 @@ type App struct {
 	AppTransport  *ghinstallation.AppsTransport
 
 	// TODO Add Database Dependencies
+	db_connection_string string
+	dbmanager            *database.DBManager
 }
 
 var Myapp App
@@ -68,10 +71,14 @@ func (a *App) Parse_from_YAML(path string) {
 		log.Println("[ERROR] Could not Parse OrgID")
 		panic(err)
 	}
+
+	// Read in the Connection String
+	a.db_connection_string = yaml_output["dbConnectionString"]
 }
 
-func (a *App) Initialize_client() {
+func (a *App) Initialize_github_client() {
 	// Initialize the Github Client and AppTransport
+	log.Println("[CLIENT] Initializing Github Client")
 
 	app_transport, err := ghinstallation.NewAppsTransportKeyFromFile(http.DefaultTransport, int64(a.AppID), a.CertPath)
 
@@ -102,8 +109,16 @@ func (a *App) Initialize_client() {
 	log.Printf("[CLIENT] successfully initialized GitHub app client, installation-id:%s expected-events:%v\n", fmt.Sprint(installationID), installation.Events)
 }
 
-/*
-func (a *App) initialize_database() {
+func (a *App) Initialize_database() {
+	// Start the database. Panic on error.
 
+	dbmanager := database.DBManager{}
+	log.Println("[DATABASE] Initializing Database Manager")
+	err := dbmanager.Init(a.db_connection_string)
+	if err != nil {
+		log.Panicln("[DATABASE] DB Initialization Failed ->", err)
+	} else {
+		a.dbmanager = &dbmanager
+		log.Println("[DATABASE] DB Manager Initialized successfully")
+	}
 }
-*/
