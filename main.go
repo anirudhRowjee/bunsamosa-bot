@@ -9,6 +9,7 @@ import (
 
 	"github.com/anirudhRowjee/bunsamosa-bot/globals"
 	"github.com/anirudhRowjee/bunsamosa-bot/handlers"
+	"github.com/rs/cors"
 )
 
 // TODO Write YAML Parsing for environment variables
@@ -43,14 +44,19 @@ func main() {
 	// Serve!
 	// TODO use Higher-Order Functions to generate this response function
 	// with the webhook secret from the YAML Parsed into the app in scope
-	http.HandleFunc("/Github", handlers.WebhookHandler)
-	http.HandleFunc("/ping", handlers.PingHandler)
-	http.HandleFunc("/lb_all", handlers.Leaderboard_allrecords)
-	http.HandleFunc("/leaderboard", handlers.Leaderboard_materialized)
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("/Github", handlers.WebhookHandler)
+	mux.HandleFunc("/ping", handlers.PingHandler)
+	mux.HandleFunc("/lb_all", handlers.Leaderboard_allrecords)
+	mux.HandleFunc("/leaderboard", handlers.Leaderboard_materialized)
+	log.Println("[INIT] Registered all routes")
+
+	handler := cors.Default().Handler(mux)
+	log.Println("[INIT] Initialized CORS")
 	log.Println("[INIT] Starting Web Server")
+	err := http.ListenAndServe("0.0.0.0:3000", handler)
 
-	err := http.ListenAndServe("0.0.0.0:3000", nil)
 	if err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}

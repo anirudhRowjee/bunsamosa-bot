@@ -90,38 +90,52 @@ func (manager *DBManager) AssignBounty(
 		Points_allotted:  bounty_points,
 	}
 
-	log.Println("[DBMANAGER][BOUNTY] Creating Contributor Record Model -> ", crm)
-
-	result := manager.db.Create(&crm)
-
-	if result.Error != nil {
-		log.Println("[ERROR][DBMANAGER][BOUNTY] Could Not Create ContributorRecordModel ->", result.Error)
-		return result.Error
-	} else {
-		log.Println("[DBMANAGER][BOUNTY] Successfully Created Contributor Record Model")
+	// Create the user struct
+	contributor_temp_representation := ContributorModel{
+		Name:           contributor,
+		Current_bounty: bounty_points,
 	}
 
-	// Update the User's points score
-	// If the contributor exists, update their score
-	// TODO Fix this
+	log.Println("[DBMANAGER][BOUNTY] Creating Contributor Record Model -> ", crm)
+	log.Println("[DBMANAGER][BOUNTY] Beginning Transaction -> ", crm)
 
-	// Find the First User with the name
-	// find_user := tx.First(&contributor_model, "name = ?", contributor_model.name)
-	// if find_user.Error != nil {
-	// 	// This means there's no user like this
+	manager.db.Transaction(func(tx *gorm.DB) error {
 
-	// }
+		// Create the time-series record
+		result := tx.Create(&crm)
+		if result.Error != nil {
 
-	// new_points := contributor_model.current_bounty + bounty_points
-	// contributor_model.current_bounty = new_points
-	// tx.Save(&contributor_model)
+			// Edge Case - User record already exists in time-series data
+			// In that case, update that
 
-	// See if this user exists
-	// If they do, assign bounty
-	// If they don't,
-	// Create a new user
+			log.Println("[ERROR][DBMANAGER][BOUNTY] Could Not Create ContributorRecordModel ->", result.Error)
+			return result.Error
+		} else {
+			log.Println("[DBMANAGER][BOUNTY] Successfully Created Contributor Record Model")
+		}
 
-	// Otherwise create a new record
+		// default case - assume the user does not exist
+
+		// Test if the user exists by attempting to create the user as
+		// a new record
+		user_create_result := tx.Create(&contributor_temp_representation)
+
+		if user_create_result.Error != nil {
+			// Check for the case where the user already exists
+
+			// if that's the case, update the bounty with the new points
+
+			// Else, report the error -> We found somethin unexpected
+
+		} else {
+			// Set the Bounty values
+			// No Error, you can use this newly created user
+			return nil
+		}
+
+		// commit the transaction
+		return nil
+	})
 
 	return nil
 }
