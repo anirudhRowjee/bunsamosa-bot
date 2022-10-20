@@ -91,10 +91,10 @@ func (manager *DBManager) AssignBounty(
 	}
 
 	// Create the user struct
-	contributor_temp_representation := ContributorModel{
-		Name:           contributor,
-		Current_bounty: bounty_points,
-	}
+	// contributor_temp_representation := ContributorModel{
+	// 	Name:           contributor,
+	// 	Current_bounty: bounty_points,
+	// }
 
 	log.Println("[DBMANAGER][BOUNTY] Creating Contributor Record Model -> ", crm)
 	log.Println("[DBMANAGER][BOUNTY] Beginning Transaction -> ", crm)
