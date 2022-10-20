@@ -116,22 +116,24 @@ func (manager *DBManager) AssignBounty(
 
 		// default case - assume the user does not exist
 
-		// Test if the user exists by attempting to create the user as
-		// a new record
-		user_create_result := tx.Create(&contributor_temp_representation)
+		/*
+			// Test if the user exists by attempting to create the user as
+			// a new record
+			user_create_result := tx.Create(&contributor_temp_representation)
 
-		if user_create_result.Error != nil {
-			// Check for the case where the user already exists
+			if user_create_result.Error != nil {
+				// Check for the case where the user already exists
 
-			// if that's the case, update the bounty with the new points
+				// if that's the case, update the bounty with the new points
 
-			// Else, report the error -> We found somethin unexpected
+				// Else, report the error -> We found somethin unexpected
 
-		} else {
-			// Set the Bounty values
-			// No Error, you can use this newly created user
-			return nil
-		}
+			} else {
+				// Set the Bounty values
+				// No Error, you can use this newly created user
+				return nil
+			}
+		*/
 
 		// commit the transaction
 		return nil
