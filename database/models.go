@@ -162,12 +162,22 @@ func (manager *DBManager) Get_all_records() ([]ContributorRecordModel, error) {
 
 func (manager *DBManager) Get_leaderboard() ([]ContributorModel, error) {
 
+	leaderboard_query := `
+	SELECT contributor_name AS Name, sum(latest_points) AS Current_bounty from (
+		select 
+			contributor_name, (SELECT points_allotted FROM contributor_record_models where t1.pullreq_url = pullreq_url order by created_at desc limit 1) as latest_points
+		from contributor_record_models as t1
+		GROUP by pullreq_url, contributor_name
+	) GROUP BY contributor_name;	
+	`
+
 	// Declare the array of all records
 	var records []ContributorModel
 
 	// Fetch from the database
 	log.Println("[DBMANAGER|LEADERBOARD] Fetching All Records")
-	fetch_result := manager.db.Find(&records)
+
+	fetch_result := manager.db.Raw(leaderboard_query).Scan(&records)
 
 	if fetch_result.Error != nil {
 		log.Println("[ERROR][DBMANAGER|LEADERBOARD] Could not fetch all records ->", fetch_result.Error)
