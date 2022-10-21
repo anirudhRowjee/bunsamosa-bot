@@ -101,6 +101,7 @@ func newPRCommentHandler(parsed_hook *ghwebhooks.IssueCommentPayload) {
 		"joyenbenitto",
 		"mukunddeepak",
 		"razerads",
+		"sid-008",
 	}
 
 	// Step 1 -> Validate, make sure the issuecomment is on a PR and not on an issue,
