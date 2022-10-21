@@ -45,7 +45,7 @@ func newIssueHandler(parsed_hook *ghwebhooks.IssuesPayload) {
 	// Generate a New Comment - Text is Customizable
 
 	// TODO Refactor: Add these responses to the App Struct
-	response := "Thank you from Opening this issue! A Maintainer will review it soon!"
+	response := "Thank you for opening this issue! A Maintainer will review it soon!"
 	comment := v3.IssueComment{Body: &response}
 
 	_, _, err := globals.Myapp.RuntimeClient.Issues.CreateComment(context.TODO(), parsed_hook.Repository.Owner.Login, parsed_hook.Repository.Name, int(parsed_hook.Issue.Number), &comment)
@@ -98,7 +98,9 @@ func newPRCommentHandler(parsed_hook *ghwebhooks.IssueCommentPayload) {
 		"himank101",
 		"theyashwanthsai",
 		"noel-saju",
+		"joyenbenitto",
 		"mukunddeepak",
+		"razerads",
 	}
 
 	// Step 1 -> Validate, make sure the issuecomment is on a PR and not on an issue,
