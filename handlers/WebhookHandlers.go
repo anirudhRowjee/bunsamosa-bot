@@ -100,7 +100,7 @@ func newPRCommentHandler(parsed_hook *ghwebhooks.IssueCommentPayload) {
 	}
 
 	// Step 1 -> Validate, make sure the issuecomment is on a PR and not on an issue,
-	if is_pull_request(parsed_hook.Issue.PullRequest.URL) && parsed_hook.Action == "created" && contains(maintainers, strings.ToLower(parsed_hook.Sender.Login)) {
+	if (parsed_hook.Issue.PullRequest != nil) && is_pull_request(parsed_hook.Issue.PullRequest.URL) && parsed_hook.Action == "created" && contains(maintainers, strings.ToLower(parsed_hook.Sender.Login)) {
 
 		log.Println("A Maintainer Commented -> ")
 		log.Printf("[PR_COMMENTHANDLER] Successfully Commented on Pull Request -> Repository [%s] PR (#%d)[%s]\n", parsed_hook.Repository.FullName, parsed_hook.Issue.Number, parsed_hook.Issue.Title)
@@ -141,6 +141,8 @@ func newPRCommentHandler(parsed_hook *ghwebhooks.IssueCommentPayload) {
 			}
 
 		}
+	} else {
+		log.Println("[WARN][BOUNTY] Someone Else commented on a PR -> ", comment_text_parts[1])
 	}
 	// Return error
 
@@ -220,7 +222,9 @@ func WebhookHandler(response http.ResponseWriter, request *http.Request) {
 	// 		- Assigning Bounty to a user
 	// 		- Freezing the Leaderboard
 	case ghwebhooks.IssueCommentPayload:
+
 		log.Printf("[PAYLOAD] Someone Commented on an issue -> user [%s] commented [%s] on repository [%s]", parsed_hook.Sender.Login, parsed_hook.Comment.Body, parsed_hook.Repository.FullName)
+
 		go newPRCommentHandler(&parsed_hook)
 
 	// The Repository has been made public
