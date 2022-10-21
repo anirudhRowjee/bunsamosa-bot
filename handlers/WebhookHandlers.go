@@ -142,7 +142,7 @@ func newPRCommentHandler(parsed_hook *ghwebhooks.IssueCommentPayload) {
 
 		}
 	} else {
-		log.Println("[WARN][BOUNTY] Someone Else commented on a PR -> ", comment_text_parts[1])
+		log.Printf("[WARN] Someone else commented on Issue -> Repository [%s] Issue (#%d)[%s]\n", parsed_hook.Repository.FullName, parsed_hook.Issue.Number, parsed_hook.Issue.Title)
 	}
 	// Return error
 
